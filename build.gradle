@@ -1,0 +1,46 @@
+plugins {
+    id 'java'
+    id 'application'
+    id 'com.github.johnrengelman.shadow' version '8.1.1'
+}
+
+group = 'org.duynguyen'
+version = '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    testImplementation platform('org.junit:junit-bom:5.10.0')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    implementation 'org.projectlombok:lombok:1.18.24'
+    implementation 'io.socket:socket.io-client:2.1.1'
+    implementation 'org.apache.commons:commons-lang3:3.12.0'
+    implementation 'org.jooq:joor:0.9.14'
+    implementation 'org.jetbrains:annotations:23.0.0'
+
+    //log
+    implementation 'org.apache.logging.log4j:log4j-core:2.24.1'
+    implementation 'org.apache.logging.log4j:log4j-api:2.14.1'
+    implementation 'org.slf4j:slf4j-api:2.0.16'
+    implementation 'org.apache.logging.log4j:log4j-slf4j2-impl:2.24.1'
+
+    annotationProcessor 'org.projectlombok:lombok:1.18.24'
+}
+
+application {
+    mainClass = 'org.duynguyen.Main'
+}
+
+shadowJar {
+    manifest {
+        attributes(
+                'Main-Class': 'org.duynguyen.Main',
+        )
+    }
+}
+
+test {
+    useJUnitPlatform()
+}
