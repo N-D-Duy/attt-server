@@ -20,6 +20,10 @@ dependencies {
     implementation 'org.jooq:joor:0.9.14'
     implementation 'org.jetbrains:annotations:23.0.0'
 
+    implementation 'com.zaxxer:HikariCP:6.1.0'
+    implementation 'com.google.code.gson:gson:2.9.0'
+    implementation 'com.googlecode.json-simple:json-simple:1.1'
+
     //log
     implementation 'org.apache.logging.log4j:log4j-core:2.24.1'
     implementation 'org.apache.logging.log4j:log4j-api:2.14.1'
