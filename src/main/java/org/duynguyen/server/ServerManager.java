@@ -1,30 +1,39 @@
 package org.duynguyen.server;
 
 import org.duynguyen.models.Client;
+import org.duynguyen.network.FileTransferSession;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-
-
 public class ServerManager {
-    public static final ArrayList<Client> clients = new ArrayList<>();
+    private static final ConcurrentHashMap<Integer, Client> clientsById = new ConcurrentHashMap<>();
+    private static final ConcurrentHashMap<String, Client> clientsByUsername = new ConcurrentHashMap<>();
+
     private static final ArrayList<String> ips = new ArrayList<>();
     private static final ReadWriteLock lockSession = new ReentrantReadWriteLock();
-    private static final ReadWriteLock lockClient = new ReentrantReadWriteLock();
+    public static final ConcurrentHashMap<String, FileTransferSession> activeSessions = new ConcurrentHashMap<>();
 
+    public static void addSession(String sessionId, FileTransferSession session) {
+        activeSessions.put(sessionId, session);
+    }
 
-    @SuppressWarnings("unchecked")
+    public static void removeSession(String sessionId) {
+        activeSessions.remove(sessionId);
+    }
+
+    public static FileTransferSession getSession(String sessionId) {
+        return activeSessions.get(sessionId);
+    }
+
     public static List<Client> getClients() {
-        return (List<Client>) clients.clone();
+        return new ArrayList<>(clientsById.values());
     }
 
     public static int getNumberOnline() {
-        return clients.size();
+        return clientsById.size();
     }
 
     public static int frequency(String ip) {
@@ -35,6 +44,7 @@ public class ServerManager {
             lockSession.readLock().unlock();
         }
     }
+
     public static void add(String ip) {
         lockSession.writeLock().lock();
         try {
@@ -54,51 +64,20 @@ public class ServerManager {
     }
 
     public static Client findClientByID(int id) {
-        lockClient.readLock().lock();
-        try {
-            for (Client client : clients) {
-                if (client.id == id) {
-                    return client;
-                }
-            }
-        } finally {
-            lockClient.readLock().unlock();
-        }
-        return null;
+        return clientsById.get(id);
     }
 
     public static Client findClientByUsername(String username) {
-        lockClient.readLock().lock();
-        try {
-            for (Client client:clients) {
-                if (client.username.equals(username)) {
-                    return client;
-                }
-            }
-        } finally {
-            lockClient.readLock().unlock();
-        }
-        return null;
-
+        return clientsByUsername.get(username);
     }
 
     public static void addClient(Client client) {
-        lockClient.writeLock().lock();
-        try {
-            clients.add(client);
-        } finally {
-            lockClient.writeLock().unlock();
-        }
+        clientsById.put(client.id, client);
+        clientsByUsername.put(client.username, client);
     }
-
 
     public static void removeClient(Client client) {
-        lockClient.writeLock().lock();
-        try {
-            clients.removeIf(cl -> Objects.equals(cl.id, client.id));
-        } finally {
-            lockClient.writeLock().unlock();
-        }
+        clientsById.remove(client.id);
+        clientsByUsername.remove(client.username);
     }
 }
-

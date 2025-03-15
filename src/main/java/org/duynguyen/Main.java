@@ -7,7 +7,6 @@ import org.duynguyen.utils.Utils;
 import org.duynguyen.utils.Log;
 
 public class Main {
-    public static boolean isStop = false;
     public static void main(String[] args) {
         if(Config.getInstance().load()){
             if (!DbManager.getInstance().start()) {

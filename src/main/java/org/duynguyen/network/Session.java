@@ -14,6 +14,7 @@ import java.io.EOFException;
 import java.io.IOException;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -34,7 +35,6 @@ public class Session implements ISession {
     private final Sender sender;
     private Thread collectorThread;
     protected Thread sendThread;
-    public String version;
     public boolean clientOK;
     public String IPAddress;
     public boolean sendKeyComplete;
@@ -46,8 +46,8 @@ public class Session implements ISession {
         this.sc = sc;
         this.id = id;
         this.sc.setKeepAlive(true);
-         this.sc.setTcpNoDelay(true);
-         this.sc.setSoTimeout(300000);//ko hoat dong -> close
+//         this.sc.setTcpNoDelay(true);
+//         this.sc.setSoTimeout(300000);//ko hoat dong -> close
         connected = true;
 
         //khoi tao io stream
@@ -181,7 +181,6 @@ public class Session implements ISession {
 
     public void generateKey() {
         this.key = ("game_" + (Utils.nextInt(10000))).getBytes();
-        // this.key = "game_1234".getBytes();
     }
 
     @Override
@@ -263,11 +262,8 @@ public class Session implements ISession {
         try(DataInputStream di = ms.reader()) {
             String username = di.readUTF().trim();
             String password = di.readUTF().trim();
-            di.readUTF();
-            di.readUTF();
-            byte server = di.readByte();
-            Log.info(String.format("Client id: %d - username: %s - server: %d", id,
-                    username, server));
+            Log.info(String.format("Client id: %d - username: %s", id,
+                    username));
             if (!connected || !sendKeyComplete) {
                 disconnect();
                 return;
@@ -287,15 +283,28 @@ public class Session implements ISession {
                 isLogin = false;
                 this.client = cl;
                 Controller controller = (Controller) getMessageHandler();
-                controller.setSes(cl);
+                controller.setClient(cl);
                 controller.setService(service);
+                //notify all users
+                service.loginOk();
+                broadcastUserList();
             } else {
                 this.isLoginSuccess = false;
                 isLogin = false;
                 Log.info("Client " + this.id + ": Đăng nhập thất bại.");
+//                service.serverDialog("Đăng nhập thất bại.");
             }
         } catch (IOException ex) {
             Logger.getLogger(Session.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
+    private void broadcastUserList() {
+        List<Client> clients = ServerManager.getClients();
+            for (Client c : clients) {
+                if(c != this.client){
+                c.session.service.sendUserList(c);
+            }
         }
     }
 
@@ -353,7 +362,9 @@ public class Session implements ISession {
             } catch (Exception e) {
                 Log.error("remove ipv4 from list", e);
             } finally {
-                ServerManager.removeClient(client);
+                if(client != null){
+                    ServerManager.removeClient(client);
+                }
             }
             try {
                 if (client != null) {
@@ -366,6 +377,7 @@ public class Session implements ISession {
                     }
                 }
             } finally {
+                broadcastUserList();
                 if (controller != null) {
                     controller.onDisconnected();
                 }
@@ -415,7 +427,7 @@ public class Session implements ISession {
                             }
                             sendingMessage.remove(0);
                         } catch (Exception e) {
-                            disconnect();
+                            closeMessage();
                             return;
                         }
                     }

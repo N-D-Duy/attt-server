@@ -59,12 +59,12 @@ public class Client {
             Pattern p = Pattern.compile("^[a-zA-Z0-9]+$|^[a-zA-Z0-9._%+-]+@gmail\\.com$");
             Matcher m1 = p.matcher(username);
             if (!m1.find()) {
-                service.serverMessage("Account name contains invalid characters!");
+                service.serverDialog("Account name contains invalid characters!");
                 return;
             }
             HashMap<String, Object> map = getClientDataMap();
             if (map == null) {
-                service.serverMessage("Invalid username or password.");
+                service.serverDialog("Invalid username or password.");
                 return;
             }
 
@@ -84,12 +84,12 @@ public class Client {
                 IPAddress.add(session.IPAddress);
             }
 
-            synchronized (ServerManager.clients) {
+            synchronized (ServerManager.getClients()) {
                 Client existingClient = ServerManager.findClientByUsername(this.username);
                 if (existingClient != null && !existingClient.isCleaned) {
-                    service.serverMessage("Account is already logged in.");
+                    service.serverDialog("Account is already logged in.");
                     if (existingClient.session != null && existingClient.session.getService() != null) {
-                        existingClient.service.serverMessage("Someone is trying to log in to your account!");
+                        existingClient.service.serverDialog("Someone is trying to log in to your account!");
                     }
                     Utils.setTimeout(() -> {
                         try {

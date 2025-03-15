@@ -2,6 +2,7 @@ package org.duynguyen.server;
 
 
 import org.duynguyen.models.Client;
+import org.duynguyen.network.Session;
 import org.duynguyen.utils.Config;
 import org.duynguyen.utils.Log;
 
@@ -36,6 +37,8 @@ public class Server {
                         client.close();
                         continue;
                     }
+                    Session session = new Session(client, ++id);
+                    session.IPAddress = ip;
                     ServerManager.add(ip);
 
                 } catch (Exception e) {
